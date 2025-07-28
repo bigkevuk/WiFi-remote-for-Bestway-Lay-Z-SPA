@@ -339,7 +339,7 @@ void setupHA()
     doc[(_name)] = F("Reboot time");
     doc[(_uniq_id)] = unique_id;
     doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/reboot_time");
-    doc[(_val_tpl)] = F("{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T')}}");
+    doc[(_val_tpl)] = F("{% if value is not none %}{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T') }}{% else %}1970-01-01 01:00:00{% endif %}");
     doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
