@@ -156,11 +156,14 @@ void CIO_6_TYPE1::updateStates()
     if(capturePhase == readtemperature)
     {
         if(cio_states.temperature == parsedValue) return;
+        // Check that the read value is in a probable range
         uint8_t tempinC = parsedValue;
         if(!cio_states.unit) tempinC = F2C(parsedValue);
         if(tempinC > 1 && tempinC < 50)
         {
-            cio_states.temperature = parsedValue;
+            //Damped change. If reading is way higher/lower than before it is probably wrong, so make a slow change rather than locking the temp.
+            if(parsedValue > cio_states.temperature) cio_states.temperature += 1;
+            else cio_states.temperature -= 1;
         }
     }
 
