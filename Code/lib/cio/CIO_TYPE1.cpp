@@ -1,5 +1,6 @@
 #include "CIO_TYPE1.h"
 #include "ports.h"
+#include "util.h"
 
 CIO_6_TYPE1 *pointerToClassCIO61;
 
@@ -88,6 +89,7 @@ void CIO_6_TYPE1::updateStates()
         return;
     }
     #endif
+
     //copy private array to public array
     for(unsigned int i = 0; i < sizeof(_payload); i++){
         _raw_payload_from_cio[i] = _payload[i];
@@ -99,17 +101,17 @@ void CIO_6_TYPE1::updateStates()
     /*If both leds are out, don't change (When TIMER is pressed)*/
     if(_raw_payload_from_cio[C_IDX] & (1 << C_BIT) || _raw_payload_from_cio[F_IDX] & (1 << F_BIT))
         cio_states.unit = (_raw_payload_from_cio[C_IDX] & (1 << C_BIT)) > 0;
-    cio_states.bubbles = (_raw_payload_from_cio[AIR_IDX] & (1 << AIR_BIT)) > 0;
-    cio_states.heatgrn = (_raw_payload_from_cio[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-    cio_states.heatred = (_raw_payload_from_cio[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-    cio_states.timerled1 = (_raw_payload_from_cio[TMR1_IDX] & (1 << TMR1_BIT)) > 0;
-    cio_states.timerled2 = (_raw_payload_from_cio[TMR2_IDX] & (1 << TMR2_BIT)) > 0;
-    cio_states.timerbuttonled = (_raw_payload_from_cio[TMRBTNLED_IDX] & (1 << TMRBTNLED_BIT)) > 0;
-    cio_states.heat = cio_states.heatgrn || cio_states.heatred;
-    cio_states.pump = (_raw_payload_from_cio[FLT_IDX] & (1 << FLT_BIT)) > 0;
-    cio_states.char1 = (uint8_t)_getChar(_raw_payload_from_cio[DGT1_IDX]);
-    cio_states.char2 = (uint8_t)_getChar(_raw_payload_from_cio[DGT2_IDX]);
-    cio_states.char3 = (uint8_t)_getChar(_raw_payload_from_cio[DGT3_IDX]);
+        cio_states.bubbles = (_raw_payload_from_cio[AIR_IDX] & (1 << AIR_BIT)) > 0;
+        cio_states.heatgrn = (_raw_payload_from_cio[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
+        cio_states.heatred = (_raw_payload_from_cio[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
+        cio_states.timerled1 = (_raw_payload_from_cio[TMR1_IDX] & (1 << TMR1_BIT)) > 0;
+        cio_states.timerled2 = (_raw_payload_from_cio[TMR2_IDX] & (1 << TMR2_BIT)) > 0;
+        cio_states.timerbuttonled = (_raw_payload_from_cio[TMRBTNLED_IDX] & (1 << TMRBTNLED_BIT)) > 0;
+        cio_states.heat = cio_states.heatgrn || cio_states.heatred;
+        cio_states.pump = (_raw_payload_from_cio[FLT_IDX] & (1 << FLT_BIT)) > 0;
+        cio_states.char1 = (uint8_t)_getChar(_raw_payload_from_cio[DGT1_IDX]);
+        cio_states.char2 = (uint8_t)_getChar(_raw_payload_from_cio[DGT2_IDX]);
+        cio_states.char3 = (uint8_t)_getChar(_raw_payload_from_cio[DGT3_IDX]);
     if(getHasjets()) 
         cio_states.jets = (_raw_payload_from_cio[HJT_IDX] & (1 << HJT_BIT)) > 0;
     else 
@@ -153,9 +155,12 @@ void CIO_6_TYPE1::updateStates()
     //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
     if(capturePhase == readtemperature)
     {
-        if(cio_states.temperature != parsedValue)
+        if(cio_states.temperature == parsedValue) return;
+        uint8_t tempinC = parsedValue;
+        if(!cio_states.unit) tempinC = F2C(parsedValue);
+        if(tempinC > 1 && tempinC < 50)
         {
-        cio_states.temperature = parsedValue;
+            cio_states.temperature = parsedValue;
         }
     }
 
