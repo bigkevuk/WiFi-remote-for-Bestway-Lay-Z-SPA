@@ -123,6 +123,10 @@ void CIO_6_TYPE1::updateStates()
     //Error or user plays with timer button - exit (error notification can be dealt with in main.cpp or elsewhere)
     if(cio_states.char1 == 'e')
     {
+        /* If last two characters are not digits then bail. This might be happening on some pumps but not my test pump/VA */
+        /* It may solve a problem with error toggling between 2 and 0 */
+        if((char)cio_states.char2 < '0' || (char)cio_states.char2 > '9') return;
+        if((char)cio_states.char3 < '0' || (char)cio_states.char3 > '9') return;
         String errornumber;
         errornumber = (char)cio_states.char2;
         errornumber += (char)cio_states.char3;
