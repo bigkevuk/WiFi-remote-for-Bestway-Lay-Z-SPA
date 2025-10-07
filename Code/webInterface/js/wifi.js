@@ -43,7 +43,7 @@ function saveNetworkConfig() {
     enableStaticIp4:  document.getElementById('enableStaticIp4').checked,
     ip4Address:       document.getElementById('ip4Address').value,
     ip4Gateway:       document.getElementById('ip4Gateway').value,
-    ip4Subnet:        document.getElementById('ip4Subnet').value,
+    ip4Subnet:        document.getElementById('ip4Subnet').value                        || '255.255.255.0',
     ip4DnsPrimary:    document.getElementById('ip4DnsPrimary').value,
     ip4DnsSecondary:  document.getElementById('ip4DnsSecondary').value,
     ip4NTP:           document.getElementById('ip4NTP').value
