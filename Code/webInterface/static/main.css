@@ -573,7 +573,14 @@
       visibility: visible;
       opacity: 1;
     }
-
+    
+    .tooltip.left:before {
+      left: initial;
+      margin: initial;
+      right: 100%;
+      margin-right: 15px;
+    }
+    
     /* Footer responsive */
     footer {
       background: rgba(0,0,0,0.05);

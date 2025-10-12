@@ -57,11 +57,17 @@
             <td>
                 <label for="calibration" data-i18n="label_calibrated">Calibrated:</label>
                 <!-- Au lieu de data-text, on utilise data-i18n="[data-text]clé" -->
-                <span data-i18n="[data-text]tooltip_calibrated_info" class="tooltip">?</span>
+                <span data-i18n="[data-text]tooltip_calibrated_info" class="tooltip" 
+                    data-text="If checked, the virtual temperature is calibrated. Recalibrate by deselecting and pressing the SAVE button.">
+                    ?
+                </span>
             </td>
             <td>
                 <input type="checkbox" id="calibration" onclick="toggleCalibration()">
-                <span data-i18n="[data-text]tooltip_calibrate_instr" class="tooltip left">?</span>
+                <span data-i18n="[data-text]tooltip_calibrate_instr" class="tooltip left" 
+                    data-text="Calibrate by keeping the heater OFF and the pump ON until the temperature drops a few degrees. Avoid switching any jets, bubbles, etc. The water temperature should initially be several degrees different from the ambient temperature.">
+                    ?
+                </span>
             </td>
             <td><a href="calib.html" data-i18n="link_manual_cal">manual cal.</a></td>
         </tr>
