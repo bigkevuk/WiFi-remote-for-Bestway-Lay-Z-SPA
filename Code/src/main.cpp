@@ -1851,7 +1851,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     /* author @malfurion, edited by @visualapproach for v4 */
     if (isBaseTopic && strcmp(subtopic, "/command_batch") == 0)
     {
-        DynamicJsonDocument doc(1024);
+        static StaticJsonDocument<1024> doc;
+        doc.clear();
         DeserializationError error = deserializeJson(doc, payload, length);
         if (error)
         {
