@@ -3,6 +3,68 @@
 #include "pitches.h"
 #include <algorithm>
 
+namespace {
+void writeJsonEscaped(String& out, const String& text)
+{
+    for (size_t i = 0; i < text.length(); i++)
+    {
+        const char c = text[i];
+        switch (c)
+        {
+            case '\"': out += F("\\\""); break;
+            case '\\': out += F("\\\\"); break;
+            case '\b': out += F("\\b"); break;
+            case '\f': out += F("\\f"); break;
+            case '\n': out += F("\\n"); break;
+            case '\r': out += F("\\r"); break;
+            case '\t': out += F("\\t"); break;
+            default:
+                if ((uint8_t)c < 0x20)
+                {
+                    char hexbuf[7];
+                    snprintf(hexbuf, sizeof(hexbuf), "\\u%04X", (uint8_t)c);
+                    out += hexbuf;
+                }
+                else
+                {
+                    out += c;
+                }
+                break;
+        }
+    }
+}
+
+void writeJsonEscaped(Print& out, const String& text)
+{
+    for (size_t i = 0; i < text.length(); i++)
+    {
+        const char c = text[i];
+        switch (c)
+        {
+            case '\"': out.print(F("\\\"")); break;
+            case '\\': out.print(F("\\\\")); break;
+            case '\b': out.print(F("\\b")); break;
+            case '\f': out.print(F("\\f")); break;
+            case '\n': out.print(F("\\n")); break;
+            case '\r': out.print(F("\\r")); break;
+            case '\t': out.print(F("\\t")); break;
+            default:
+                if ((uint8_t)c < 0x20)
+                {
+                    char hexbuf[7];
+                    snprintf(hexbuf, sizeof(hexbuf), "\\u%04X", (uint8_t)c);
+                    out.print(hexbuf);
+                }
+                else
+                {
+                    out.print(c);
+                }
+                break;
+        }
+    }
+}
+}
+
 BWC::BWC()
 {
     //Initialize variables
@@ -1154,22 +1216,40 @@ String BWC::getJSONCommandQueue(){
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    DynamicJsonDocument doc(8192);
-    // Set the values in the document
-    doc[F("LEN")] = _command_que.size();
-    for(unsigned int i = 0; i < _command_que.size(); i++){
-        doc[F("CMD")][i] = _command_que[i].cmd;
-        doc[F("VALUE")][i] = _command_que[i].val;
-        doc[F("XTIME")][i] = _command_que[i].xtime;
-        doc[F("INTERVAL")][i] = _command_que[i].interval;
-        doc[F("TXT")][i] = _command_que[i].text;
-    }
-
-    // Serialize JSON to file
     String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize cmdq\"}");
+    jsonmsg.reserve(256 + _command_que.size() * 96);
+
+    jsonmsg += F("{\"LEN\":");
+    jsonmsg += _command_que.size();
+    jsonmsg += F(",\"CMD\":[");
+    for (unsigned int i = 0; i < _command_que.size(); i++) {
+        if (i > 0) jsonmsg += ',';
+        jsonmsg += (int)_command_que[i].cmd;
     }
+    jsonmsg += F("],\"VALUE\":[");
+    for (unsigned int i = 0; i < _command_que.size(); i++) {
+        if (i > 0) jsonmsg += ',';
+        jsonmsg += _command_que[i].val;
+    }
+    jsonmsg += F("],\"XTIME\":[");
+    for (unsigned int i = 0; i < _command_que.size(); i++) {
+        if (i > 0) jsonmsg += ',';
+        jsonmsg += _command_que[i].xtime;
+    }
+    jsonmsg += F("],\"INTERVAL\":[");
+    for (unsigned int i = 0; i < _command_que.size(); i++) {
+        if (i > 0) jsonmsg += ',';
+        jsonmsg += _command_que[i].interval;
+    }
+    jsonmsg += F("],\"TXT\":[");
+    for (unsigned int i = 0; i < _command_que.size(); i++) {
+        if (i > 0) jsonmsg += ',';
+        jsonmsg += '\"';
+        writeJsonEscaped(jsonmsg, _command_que[i].text);
+        jsonmsg += '\"';
+    }
+    jsonmsg += F("]}");
+
     BWC_YIELD;
     return jsonmsg;
 }
@@ -1543,7 +1623,11 @@ void BWC::loadCommandQueue(){
         return;
     }
 
-    DynamicJsonDocument doc(8192);
+    const size_t fileSize = file.size();
+    size_t docCapacity = fileSize + 512;
+    docCapacity = std::max<size_t>(docCapacity, 1024);
+    docCapacity = std::min<size_t>(docCapacity, 8192);
+    DynamicJsonDocument doc(docCapacity);
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
@@ -1642,25 +1726,41 @@ void BWC::_saveCommandQueue(){
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
-        if(_command_que[0].cmd == REBOOTESP && _command_que[0].interval == 0) return;
-    DynamicJsonDocument doc(8192);
+        if(_command_que[0].cmd == REBOOTESP && _command_que[0].interval == 0) {
+            file.close();
+            return;
+        }
 
-    // Set the values in the document
-    doc[F("LEN")] = _command_que.size();
+    file.print(F("{\"LEN\":"));
+    file.print(_command_que.size());
+    file.print(F(",\"CMD\":["));
     for(unsigned int i = 0; i < _command_que.size(); i++){
-        doc[F("CMD")][i] = _command_que[i].cmd;
-        doc[F("VALUE")][i] = _command_que[i].val;
-        doc[F("XTIME")][i] = _command_que[i].xtime;
-        doc[F("INTERVAL")][i] = _command_que[i].interval;
-        doc[F("TXT")][i] = _command_que[i].text;
+        if(i > 0) file.print(',');
+        file.print((int)_command_que[i].cmd);
     }
-    // Serialize JSON to file
-    size_t err = serializeJson(doc, file);
-    if (err == 0) {
-        // BWC_LOG_P(PSTR("\nFailed to serialize cmdq.json\n"),0);
-    } else {
-        // BWC_LOG_P(PSTR("%s\n"),s.c_str());
+    file.print(F("],\"VALUE\":["));
+    for(unsigned int i = 0; i < _command_que.size(); i++){
+        if(i > 0) file.print(',');
+        file.print(_command_que[i].val);
     }
+    file.print(F("],\"XTIME\":["));
+    for(unsigned int i = 0; i < _command_que.size(); i++){
+        if(i > 0) file.print(',');
+        file.print(_command_que[i].xtime);
+    }
+    file.print(F("],\"INTERVAL\":["));
+    for(unsigned int i = 0; i < _command_que.size(); i++){
+        if(i > 0) file.print(',');
+        file.print(_command_que[i].interval);
+    }
+    file.print(F("],\"TXT\":["));
+    for(unsigned int i = 0; i < _command_que.size(); i++){
+        if(i > 0) file.print(',');
+        file.print('\"');
+        writeJsonEscaped(file, _command_que[i].text);
+        file.print('\"');
+    }
+    file.print(F("]}"));
 
     file.close();
     BWC_YIELD;
