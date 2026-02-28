@@ -1,5 +1,6 @@
 #include "main.h"
 #include "ports.h"
+#include <cstring>
 
 #define WS_PERIOD 4.0
 // initial stack
@@ -1817,12 +1818,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         // Serial.print((char)payload[i]);
     }
     // Serial.println();
-    if (String(topic).equals(String(mqtt_info->mqttBaseTopic) + F("/command")))
+    const char* baseTopic = mqtt_info->mqttBaseTopic.c_str();
+    size_t baseLen = strlen(baseTopic);
+    bool isBaseTopic = strncmp(topic, baseTopic, baseLen) == 0;
+    const char* subtopic = isBaseTopic ? topic + baseLen : "";
+
+    if (isBaseTopic && strcmp(subtopic, "/command") == 0)
     {
         // DynamicJsonDocument doc(256);
         StaticJsonDocument<256> doc;
-        String message = (const char *) &payload[0];
-        DeserializationError error = deserializeJson(doc, message);
+        DeserializationError error = deserializeJson(doc, payload, length);
         if (error)
         {
             return;
@@ -1844,11 +1849,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     }
 
     /* author @malfurion, edited by @visualapproach for v4 */
-    if (String(topic).equals(String(mqtt_info->mqttBaseTopic) + F("/command_batch")))
+    if (isBaseTopic && strcmp(subtopic, "/command_batch") == 0)
     {
         DynamicJsonDocument doc(1024);
-        String message = (const char *) &payload[0];
-        DeserializationError error = deserializeJson(doc, message);
+        DeserializationError error = deserializeJson(doc, payload, length);
         if (error)
         {
             return;
@@ -1861,7 +1865,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
             int64_t value = commandItem[F("VALUE")];
             int64_t xtime = commandItem[F("XTIME")];
             int64_t interval = commandItem[F("INTERVAL")];
-            String txt = doc[F("TXT")] | "";
+            String txt = commandItem[F("TXT")] | "";
             command_que_item item;
             item.cmd = command;
             item.val = value;
@@ -1874,10 +1878,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         return;
     }
 
-    if (String(topic).equals(String(mqtt_info->mqttBaseTopic) + F("/set_config")))
+    if (isBaseTopic && strcmp(subtopic, "/set_config") == 0)
     {
-        String message = (const char *) &payload[0];    
-        bwc->setJSONSettings(message);
+        bwc->setJSONSettings(payload, length);
         send_mqtt_cfg_needed = true;
     }
 }

@@ -66,6 +66,7 @@ class BWC {
         void getJSONTimes(String &rtn);
         void getJSONSettings(String &rtn);
         void setJSONSettings(const String& message);
+        void setJSONSettings(const uint8_t* payload, size_t length);
         String getJSONCommandQueue();
         uint8_t getState(int state);
         // void saveSettingsFlag();

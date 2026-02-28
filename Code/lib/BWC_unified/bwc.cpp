@@ -1223,6 +1223,38 @@ void BWC::setJSONSettings(const String& message){
     BWC_YIELD;
 }
 
+void BWC::setJSONSettings(const uint8_t* payload, size_t length){
+    DynamicJsonDocument doc(1024);
+
+    DeserializationError error = deserializeJson(doc, payload, length);
+    if (error) {
+        return;
+    }
+
+    _price = doc[F("PRICE")] | _price;
+    _filter_replace_interval = doc[F("FREPI")] | _filter_replace_interval;
+    _filter_rinse_interval = doc[F("FRINI")] | _filter_rinse_interval;
+    _filter_clean_interval = doc[F("FCLEI")] | _filter_clean_interval;
+    _cl_interval = doc[F("CLINT")] | _cl_interval;
+    _audio_enabled = doc[F("AUDIO")] | _audio_enabled;
+    _restore_states_on_start = doc[F("RESTORE")] | _restore_states_on_start;
+    _notify = doc[F("NOTIFY")] | _notify;
+    _notification_time = doc[F("NOTIFTIME")] | _notification_time;
+    _vt_calibrated = doc[F("VTCAL")] | _vt_calibrated;
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")] | dsp->EnabledButtons[LOCK];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")] | dsp->EnabledButtons[TIMER];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")] | dsp->EnabledButtons[BUBBLES];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")] | dsp->EnabledButtons[UNIT];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")] | dsp->EnabledButtons[HEAT];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")] | dsp->EnabledButtons[PUMP];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")] | dsp->EnabledButtons[DOWN];
+    dsp->EnabledButtons[UP] = doc[F("UP")] | dsp->EnabledButtons[UP];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")] | dsp->EnabledButtons[POWER];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")] | dsp->EnabledButtons[HYDROJETS];
+    saveSettings();
+    BWC_YIELD;
+}
+
 bool BWC::newData(){
     bool result = _new_data_available;
     _new_data_available = false;
