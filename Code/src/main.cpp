@@ -1285,7 +1285,7 @@ void loadWifi()
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
 
     DeserializationError error = deserializeJson(doc, file);
     if (error)
@@ -1324,7 +1324,7 @@ void saveWifi()
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
 
     doc[F("enableAp")] = wifi_info->enableAp;
     doc[F("enableWM")] = wifi_info->enableWmApFallback;
@@ -1354,7 +1354,7 @@ void handleGetWifi()
 {
     if (!checkHttpPost(server->method())) return;
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
 
     doc[F("enableAp")] = wifi_info->enableAp;
     doc[F("enableWM")] = wifi_info->enableWmApFallback;
@@ -1389,7 +1389,7 @@ void handleSetWifi()
 {
     if (!checkHttpPost(server->method())) return;
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
     String message = server->arg(0);
     DeserializationError error = deserializeJson(doc, message);
     if (error)
@@ -1475,7 +1475,7 @@ void loadMqtt()
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
 
     DeserializationError error = deserializeJson(doc, file);
     if (error)
@@ -1508,7 +1508,7 @@ void saveMqtt()
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
 
     doc[F("enableMqtt")] = mqtt_info->useMqtt;
     doc[F("mqttHost")] = mqtt_info->mqttHost;
@@ -1535,7 +1535,7 @@ void handleGetMqtt()
 {
     if (!checkHttpPost(server->method())) return;
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
 
     doc[F("enableMqtt")] = mqtt_info->useMqtt;
     doc[F("mqttHost")] = mqtt_info->mqttHost;
@@ -1567,7 +1567,7 @@ void handleSetMqtt()
 {
     if (!checkHttpPost(server->method())) return;
 
-    DynamicJsonDocument doc(1024);
+    StaticJsonDocument<1024> doc;
     String message = server->arg(0);
     DeserializationError error = deserializeJson(doc, message);
     if (error)
@@ -1851,8 +1851,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     /* author @malfurion, edited by @visualapproach for v4 */
     if (isBaseTopic && strcmp(subtopic, "/command_batch") == 0)
     {
-        static StaticJsonDocument<1024> doc;
-        doc.clear();
+        StaticJsonDocument<1024> doc;
         DeserializationError error = deserializeJson(doc, payload, length);
         if (error)
         {

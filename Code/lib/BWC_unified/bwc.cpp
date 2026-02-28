@@ -1116,8 +1116,7 @@ void BWC::getJSONTimes(String &rtn) {
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    static StaticJsonDocument<1024> doc;
-    doc.clear();
+    StaticJsonDocument<1024> doc;
 
     // Set the values in the document
     doc[F("CONTENT")] = F("TIMES");
@@ -1172,8 +1171,7 @@ void BWC::getJSONSettings(String &rtn){
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    static StaticJsonDocument<1024> doc;
-    doc.clear();
+    StaticJsonDocument<1024> doc;
 
     // Set the values in the document
     doc[F("CONTENT")] = F("SETTINGS");
@@ -1272,8 +1270,7 @@ Buttons BWC::getButton()
 void BWC::setJSONSettings(const String& message){
     //feed the dog
     // ESP.wdtFeed();
-    static StaticJsonDocument<1024> doc;
-    doc.clear();
+    StaticJsonDocument<1024> doc;
 
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, message);
@@ -1308,8 +1305,7 @@ void BWC::setJSONSettings(const String& message){
 }
 
 void BWC::setJSONSettings(const uint8_t* payload, size_t length){
-    static StaticJsonDocument<1024> doc;
-    doc.clear();
+    StaticJsonDocument<1024> doc;
 
     DeserializationError error = deserializeJson(doc, payload, length);
     if (error) {
