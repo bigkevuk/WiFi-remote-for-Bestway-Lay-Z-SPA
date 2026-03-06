@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: layzspa-soak
+    orgId: 1
+    folder: Lay-Z-Spa
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards

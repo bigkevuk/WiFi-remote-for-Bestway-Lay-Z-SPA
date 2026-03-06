@@ -1,0 +1,68 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USERNAME:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:-changeme123}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-layzspa}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUX_BUCKET:-spa}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:-JyXDuLzMT3dwxxi0afT57A430QvUHGRHQvReKz7Mj1uILpvltowPxwtoblIAaWWP}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+  telegraf:
+    image: telegraf:1.31
+    container_name: telegraf
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    environment:
+      MQTT_HOST: ${MQTT_HOST:-10.10.5.211}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USERNAME: ${MQTT_USERNAME:-telegraf}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-layzspaM0dule}
+      MQTT_BASE_TOPIC: ${MQTT_BASE_TOPIC:-layzspa}
+      INFLUX_URL: ${INFLUX_URL:-http://influxdb:8086}
+      INFLUX_ORG: ${INFLUX_ORG:-layzspa}
+      INFLUX_BUCKET: ${INFLUX_BUCKET:-spa}
+      INFLUX_TOKEN: ${INFLUX_TOKEN:-JyXDuLzMT3dwxxi0afT57A430QvUHGRHQvReKz7Mj1uILpvltowPxwtoblIAaWWP}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export MQTT_USERNAME="$(printf '%s' "$MQTT_USERNAME" | tr -d '\r\n')"
+        export MQTT_PASSWORD="$(printf '%s' "$MQTT_PASSWORD" | tr -d '\r\n')"
+        export INFLUX_TOKEN="$(printf '%s' "$INFLUX_TOKEN" | tr -d '\r\n')"
+        exec telegraf --config /etc/telegraf/telegraf.conf
+    volumes:
+      - ./tools/soak/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      INFLUX_URL: ${INFLUX_URL:-http://influxdb:8086}
+      INFLUX_ORG: ${INFLUX_ORG:-layzspa}
+      INFLUX_BUCKET: ${INFLUX_BUCKET:-spa}
+      INFLUX_TOKEN: ${INFLUX_TOKEN:-lhSO_AUMJs9WExMMofExAhErZS52GxSSZyooL3u_zXGWDOZxUvhz9ovH8HEMISa3HHlaizSwEPgVGKarwZ08pA==}
+    volumes:
+      - ./tools/soak/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./tools/soak/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  mosquitto_log:
+  influxdb_data:
+  grafana_data:
