@@ -4,5 +4,5 @@
 .vscode/launch.json
 .vscode/ipch
 data/*.json
-webinterface/__pycache__
+webInterface/__pycache__
 platformio_override.ini
