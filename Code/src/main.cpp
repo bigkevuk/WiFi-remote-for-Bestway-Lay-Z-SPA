@@ -1052,6 +1052,9 @@ bool handleFileRead(String path)
         if (LittleFS.exists(pathWithGz))      // If there's a compressed version available
             path += ".gz";                    // Use the compressed version
         File file = LittleFS.open(path, "r"); // Open the file
+        // ESP8266 Arduino Core 3.1.2 waits on the File timeout while sending.
+        // Match the HTTP client's longer timeout so a full TCP buffer cannot truncate the response.
+        file.setTimeout(server->client().getTimeout());
         size_t fsize = file.size();
         BWC_YIELD;
         size_t sent = server->streamFile(file, contentType); // Send it to the client
